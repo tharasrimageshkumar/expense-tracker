@@ -22,6 +22,12 @@ function Home() {
   const [monthlyTotal, setMonthlyTotal] = useState(0);
   const [monthlyCount, setMonthlyCount] = useState(0);
   const [topCategory, setTopCategory] = useState("None");
+  const [aiInsights, setAiInsights] = useState({
+  prediction: 0,
+  topCategory: "None",
+  advice: "",
+  anomaly: "",
+});
 
   const budgetLimits = {
     Food: 5000,
@@ -90,6 +96,14 @@ function Home() {
         }
 
         setTopCategory(highestCategory);
+
+        try {
+  const aiRes = await API.get(`/ai/${user._id}`);
+
+  setAiInsights(aiRes.data);
+} catch (error) {
+  console.log("Error fetching AI insights");
+}
       } catch (error) {
         console.log("Error fetching dashboard data");
       }
@@ -189,6 +203,33 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* AI + ML Insights */}
+<section style={styles.section}>
+  <h2>AI + ML Smart Insights</h2>
+
+  <div style={styles.analyticsGrid}>
+    <div style={styles.analyticsCard}>
+      <h4>Predicted Next Month Spending</h4>
+      <p>Rs {Number(aiInsights.prediction).toFixed(2)}</p>
+    </div>
+
+    <div style={styles.analyticsCard}>
+      <h4>Highest Spending Category</h4>
+      <p>{aiInsights.topCategory}</p>
+    </div>
+
+    <div style={styles.analyticsCard}>
+      <h4>AI Savings Advice</h4>
+      <p>{aiInsights.advice}</p>
+    </div>
+
+    <div style={styles.analyticsCard}>
+      <h4>Anomaly Detection</h4>
+      <p>{aiInsights.anomaly}</p>
+    </div>
+  </div>
+</section>
     </div>
   );
 }
