@@ -19,19 +19,22 @@ function ExpenseForm() {
   };
 
   const handleAddExpense = async () => {
-    if (!user) {
-      alert("Please login first");
-      return;
-    }
+  if (!user) {
+    alert("Please login first");
+    return;
+  }
 
-    try {
-      const res = await API.post("/expenses/add", {
-        ...formData,
-        amount: Math.round(Number(formData.amount)),
-        userId: user._id,
-      });
+  try {
+    const res = await API.post("/expenses/add", {
+      ...formData,
+      amount: Math.round(Number(formData.amount)),
+      userId: user._id,
+    });
 
-      alert("Expense added successfully");
+    console.log("Expense Add Response:", res.data);
+
+    if (res.status === 201 || res.status === 200) {
+      alert("Expense added successfully!");
 
       setFormData({
         title: "",
@@ -41,10 +44,12 @@ function ExpenseForm() {
       });
 
       window.location.reload();
-    } catch (error) {
-      alert("Failed to add expense");
     }
-  };
+  } catch (error) {
+    console.log("Add Expense Error:", error.response?.data || error.message);
+    alert("Failed to add expense");
+  }
+};
 
   return (
     <div style={styles.form}>
