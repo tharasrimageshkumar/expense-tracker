@@ -27,6 +27,7 @@ function ExpenseForm() {
     try {
       const res = await API.post("/expenses/add", {
         ...formData,
+        amount: Math.round(Number(formData.amount)),
         userId: user._id,
       });
 

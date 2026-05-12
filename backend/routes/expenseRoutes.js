@@ -13,12 +13,13 @@ const sendBudgetAlertEmail = require("../utils/emailService");
 router.post("/add", async (req, res) => {
   try {
     const { userId, title, amount, category, date } = req.body;
+    const finalAmount = Math.round(Number(amount));
     console.log("Incoming Expense:", req.body);
 
     const expense = new Expense({
       userId,
       title,
-      amount,
+      amount: finalAmount,
       category,
       date,
     });
