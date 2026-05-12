@@ -41,7 +41,7 @@ const [budgetAmount, setBudgetAmount] = useState("");
       const res = await API.get(`/expenses/${user._id}`);
 
       const total = res.data.reduce(
-        (sum, expense) => sum + Number(expense.amount),
+        (sum, expense) => sum + Math.round(Number(expense.amount)),
         0
       );
 
@@ -57,7 +57,7 @@ const [budgetAmount, setBudgetAmount] = useState("");
 
       res.data.forEach((expense) => {
         if (categoryData[expense.category] !== undefined) {
-          categoryData[expense.category] += Number(expense.amount);
+          categoryData[expense.category] += Math.round(Number(expense.amount));
         }
       });
 
@@ -76,7 +76,7 @@ const [budgetAmount, setBudgetAmount] = useState("");
       });
 
       const monthlySum = monthlyExpenses.reduce(
-        (sum, expense) => sum + Number(expense.amount),
+        (sum, expense) => sum + Math.round(Number(expense.amount)),
         0
       );
 
@@ -106,7 +106,7 @@ const [budgetAmount, setBudgetAmount] = useState("");
       };
 
       budgetRes.data.forEach((budget) => {
-        updatedBudgets[budget.category] = Number(budget.amount);
+        updatedBudgets[budget.category] = Math.round(Number(budget.amount));
       });
 
       setBudgetLimits(updatedBudgets);
@@ -143,7 +143,7 @@ const [budgetAmount, setBudgetAmount] = useState("");
 
     setBudgetLimits((prev) => ({
   ...prev,
-  [budgetCategory]: Number(budgetAmount),
+  [budgetCategory]: Math.round(Number(budgetAmount)),
 }));
 
     alert("Budget saved successfully!");

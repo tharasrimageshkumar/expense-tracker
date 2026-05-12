@@ -224,6 +224,8 @@ const styles = {
     flexDirection: "column",
     gap: "15px",
     marginTop: "20px",
+    overflow: "hidden",
+    maxHeight: "none"
   },
 
   filterContainer: {

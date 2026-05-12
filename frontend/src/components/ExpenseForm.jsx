@@ -24,6 +24,8 @@ function ExpenseForm() {
     return;
   }
 
+  alert("Adding expense...");
+
   try {
     const res = await API.post("/expenses/add", {
       ...formData,
@@ -43,6 +45,7 @@ function ExpenseForm() {
         date: "",
       });
 
+      window.location.reload();
     }
   } catch (error) {
     console.log("Add Expense Error:", error.response?.data || error.message);
