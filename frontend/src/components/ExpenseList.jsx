@@ -32,14 +32,16 @@ function ExpenseList() {
   }, []);
 
   const handleDelete = async (id) => {
-    try {
-      await API.delete(`/expenses/delete/${id}`);
-      alert("Expense deleted successfully");
-      window.location.reload();
-    } catch (error) {
-      alert("Failed to delete expense");
-    }
-  };
+  try {
+    await API.delete(`/expenses/${id}`);
+
+    alert("Expense deleted successfully!");
+
+    window.location.reload();
+  } catch (error) {
+    console.log("Error deleting expense:", error);
+  }
+};
 
   const handleEditClick = (expense) => {
     setEditingId(expense._id);
@@ -54,7 +56,7 @@ function ExpenseList() {
 
   const handleUpdate = async (id) => {
     try {
-      await API.put(`/expenses/update/${id}`, editForm);
+      await API.put(`/expenses/${id}`, editForm);
 
       alert("Expense updated successfully");
 

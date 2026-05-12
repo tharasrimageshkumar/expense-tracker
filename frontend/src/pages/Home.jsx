@@ -22,97 +22,104 @@ function Home() {
   const [monthlyTotal, setMonthlyTotal] = useState(0);
   const [monthlyCount, setMonthlyCount] = useState(0);
   const [topCategory, setTopCategory] = useState("None");
-  const [aiInsights, setAiInsights] = useState({
-  prediction: 0,
-  topCategory: "None",
-  advice: "",
-  anomaly: "",
+
+
+const [budgetCategory, setBudgetCategory] = useState("");
+const [budgetAmount, setBudgetAmount] = useState("");
+
+  const [budgetLimits, setBudgetLimits] = useState({
+  Food: 0,
+  Transport: 0,
+  Shopping: 0,
+  Bills: 0,
+  Other: 0,
 });
 
-  const budgetLimits = {
-    Food: 5000,
-    Transport: 3000,
-    Shopping: 7000,
-    Bills: 4000,
-    Other: 2000,
+  useEffect(() => {
+  const fetchExpenses = async () => {
+    try {
+      const res = await API.get(`/expenses/${user._id}`);
+
+      const total = res.data.reduce(
+        (sum, expense) => sum + Number(expense.amount),
+        0
+      );
+
+      setTotalSpent(total);
+
+      const categoryData = {
+        Food: 0,
+        Transport: 0,
+        Shopping: 0,
+        Bills: 0,
+        Other: 0,
+      };
+
+      res.data.forEach((expense) => {
+        if (categoryData[expense.category] !== undefined) {
+          categoryData[expense.category] += Number(expense.amount);
+        }
+      });
+
+      setCategoryTotals(categoryData);
+
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+
+      const monthlyExpenses = res.data.filter((expense) => {
+        const expenseDate = new Date(expense.date);
+
+        return (
+          expenseDate.getMonth() === currentMonth &&
+          expenseDate.getFullYear() === currentYear
+        );
+      });
+
+      const monthlySum = monthlyExpenses.reduce(
+        (sum, expense) => sum + Number(expense.amount),
+        0
+      );
+
+      setMonthlyTotal(monthlySum);
+      setMonthlyCount(monthlyExpenses.length);
+
+      let highestCategory = "None";
+      let highestValue = 0;
+
+      for (const category in categoryData) {
+        if (categoryData[category] > highestValue) {
+          highestValue = categoryData[category];
+          highestCategory = category;
+        }
+      }
+
+      setTopCategory(highestCategory);
+
+      const budgetRes = await API.get(`/budgets/${user._id}`);
+
+      const updatedBudgets = {
+        Food: 0,
+        Transport: 0,
+        Shopping: 0,
+        Bills: 0,
+        Other: 0,
+      };
+
+      budgetRes.data.forEach((budget) => {
+        updatedBudgets[budget.category] = Number(budget.amount);
+      });
+
+      setBudgetLimits(updatedBudgets);
+    } catch (error) {
+      console.log("Error fetching dashboard data:", error);
+    }
   };
 
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      try {
-        const res = await API.get(`/expenses/${user._id}`);
+  if (user) {
+    fetchExpenses();
+  }
+}, []);
 
-        const total = res.data.reduce(
-          (sum, expense) => sum + Number(expense.amount),
-          0
-        );
-
-        setTotalSpent(total);
-
-        const categoryData = {
-          Food: 0,
-          Transport: 0,
-          Shopping: 0,
-          Bills: 0,
-          Other: 0,
-        };
-
-        res.data.forEach((expense) => {
-          if (categoryData[expense.category] !== undefined) {
-            categoryData[expense.category] += Number(expense.amount);
-          }
-        });
-
-        setCategoryTotals(categoryData);
-
-        const currentMonth = new Date().getMonth();
-        const currentYear = new Date().getFullYear();
-
-        const monthlyExpenses = res.data.filter((expense) => {
-          const expenseDate = new Date(expense.date);
-
-          return (
-            expenseDate.getMonth() === currentMonth &&
-            expenseDate.getFullYear() === currentYear
-          );
-        });
-
-        const monthlySum = monthlyExpenses.reduce(
-          (sum, expense) => sum + Number(expense.amount),
-          0
-        );
-
-        setMonthlyTotal(monthlySum);
-        setMonthlyCount(monthlyExpenses.length);
-
-        let highestCategory = "None";
-        let highestValue = 0;
-
-        for (const category in categoryData) {
-          if (categoryData[category] > highestValue) {
-            highestValue = categoryData[category];
-            highestCategory = category;
-          }
-        }
-
-        setTopCategory(highestCategory);
-
-        try {
-  const aiRes = await API.get(`/ai/${user._id}`);
-
-  setAiInsights(aiRes.data);
-} catch (error) {
-  console.log("Error fetching AI insights");
-}
-      } catch (error) {
-        console.log("Error fetching dashboard data");
-      }
-    };
-
-    if (user) {
-      fetchExpenses();
-    }
-  }, []);
 
   if (!user) {
     navigate("/login");
@@ -123,6 +130,30 @@ function Home() {
     localStorage.removeItem("user");
     navigate("/login");
   };
+
+  const handleBudgetSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    await API.post("/budgets/set", {
+      userId: user._id,
+      category: budgetCategory,
+      amount: budgetAmount,
+    });
+
+    setBudgetLimits((prev) => ({
+  ...prev,
+  [budgetCategory]: Number(budgetAmount),
+}));
+
+    alert("Budget saved successfully!");
+
+    setBudgetCategory("");
+    setBudgetAmount("");
+  } catch (error) {
+    console.log("Error saving budget:", error);
+  }
+};
 
   return (
     <div style={styles.page}>
@@ -146,6 +177,40 @@ function Home() {
         <span>Total Spent:</span>
         <strong>Rs {totalSpent.toFixed(2)}</strong>
       </div>
+
+      {/* Set Budget */}
+<section style={styles.section}>
+  <h2>Set Category Budget</h2>
+
+  <form onSubmit={handleBudgetSubmit} style={styles.form}>
+    <select
+      value={budgetCategory}
+      onChange={(e) => setBudgetCategory(e.target.value)}
+      required
+      style={styles.input}
+    >
+      <option value="">Select Category</option>
+      <option value="Food">Food</option>
+      <option value="Transport">Transport</option>
+      <option value="Shopping">Shopping</option>
+      <option value="Bills">Bills</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <input
+      type="number"
+      placeholder="Enter Budget Amount"
+      value={budgetAmount}
+      onChange={(e) => setBudgetAmount(e.target.value)}
+      required
+      style={styles.input}
+    />
+
+    <button type="submit" style={styles.saveBtn}>
+      Save Budget
+    </button>
+  </form>
+</section>
 
       {/* Budget Overview */}
       <section style={styles.section}>
@@ -204,37 +269,35 @@ function Home() {
         </div>
       </section>
 
-      {/* AI + ML Insights */}
-<section style={styles.section}>
-  <h2>AI + ML Smart Insights</h2>
-
-  <div style={styles.analyticsGrid}>
-    <div style={styles.analyticsCard}>
-      <h4>Predicted Next Month Spending</h4>
-      <p>Rs {Number(aiInsights.prediction).toFixed(2)}</p>
-    </div>
-
-    <div style={styles.analyticsCard}>
-      <h4>Highest Spending Category</h4>
-      <p>{aiInsights.topCategory}</p>
-    </div>
-
-    <div style={styles.analyticsCard}>
-      <h4>AI Savings Advice</h4>
-      <p>{aiInsights.advice}</p>
-    </div>
-
-    <div style={styles.analyticsCard}>
-      <h4>Anomaly Detection</h4>
-      <p>{aiInsights.anomaly}</p>
-    </div>
-  </div>
-</section>
+     
     </div>
   );
 }
 
 const styles = {
+
+  form: {
+  display: "flex",
+  gap: "15px",
+  flexWrap: "wrap",
+  marginTop: "15px",
+},
+
+input: {
+  padding: "10px",
+  borderRadius: "5px",
+  border: "1px solid #ccc",
+  minWidth: "200px",
+},
+
+saveBtn: {
+  padding: "10px 18px",
+  background: "#16a34a",
+  color: "#fff",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
+},
   page: {
     background: "#f3f4f6",
     minHeight: "100vh",

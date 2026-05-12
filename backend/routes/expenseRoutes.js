@@ -1,41 +1,98 @@
 const express = require("express");
 const router = express.Router();
-const Expense = require("../models/Expense");
 
+const Expense = require("../models/Expense");
+const Budget = require("../models/Budget");
+const User = require("../models/User");
+const sendBudgetAlertEmail = require("../utils/emailService");
+
+
+// =========================
+// ADD EXPENSE
+// =========================
 router.post("/add", async (req, res) => {
   try {
-    const { title, amount, category, date, userId } = req.body;
+    const { userId, title, amount, category, date } = req.body;
+    console.log("Incoming Expense:", req.body);
 
-    const expense = await Expense.create({
-  title,
-  amount,
-  category,
-  date,
-  userId,
-});
+    const expense = new Expense({
+      userId,
+      title,
+      amount,
+      category,
+      date,
+    });
+
+    await expense.save();
+
+    // =========================
+    // CHECK BUDGET THRESHOLD
+    // =========================
+    const budget = await Budget.findOne({
+      userId,
+      category,
+    });
+    console.log("Budget found:", budget);
+
+    if (budget) {
+      const categoryExpenses = await Expense.find({
+        userId,
+        category,
+      });
+
+      const totalSpent = categoryExpenses.reduce(
+        (sum, item) => sum + Number(item.amount),
+        0
+      );
+
+      if (totalSpent > Number(budget.amount)) {
+        const user = await User.findById(userId);
+
+        if (user && user.email) {
+          await sendBudgetAlertEmail(
+            user.email,
+            category,
+            totalSpent,
+            budget.amount
+          );
+        }
+      }
+    }
 
     res.status(201).json({
       message: "Expense added successfully",
       expense,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 });
 
+
+// =========================
+// GET USER EXPENSES
+// =========================
 router.get("/:userId", async (req, res) => {
   try {
     const expenses = await Expense.find({
       userId: req.params.userId,
-    });
+    }).sort({ date: -1 });
 
     res.status(200).json(expenses);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 });
 
-router.delete("/delete/:id", async (req, res) => {
+
+// =========================
+// DELETE EXPENSE
+// =========================
+router.delete("/:id", async (req, res) => {
   try {
     await Expense.findByIdAndDelete(req.params.id);
 
@@ -43,31 +100,29 @@ router.delete("/delete/:id", async (req, res) => {
       message: "Expense deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 });
 
-router.put("/update/:id", async (req, res) => {
-  try {
-    const { title, amount, category, date } = req.body;
 
+// =========================
+// UPDATE EXPENSE
+// =========================
+router.put("/:id", async (req, res) => {
+  try {
     const updatedExpense = await Expense.findByIdAndUpdate(
       req.params.id,
-      {
-        title,
-        amount,
-        category,
-        date,
-      },
+      req.body,
       { new: true }
     );
 
-    res.status(200).json({
-      message: "Expense updated successfully",
-      updatedExpense,
-    });
+    res.status(200).json(updatedExpense);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      message: error.message,
+    });
   }
 });
 
