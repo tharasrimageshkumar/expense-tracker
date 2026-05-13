@@ -24,6 +24,7 @@ const sendBudgetAlert = async (to, category, spent, budget) => {
           `,
           text: message,
           from: process.env.EMAIL_USER,
+          smtpId: process.env.SMTP_ID,
         },
         {
           headers: {
