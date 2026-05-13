@@ -3,7 +3,6 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const budgetRoutes = require("./routes/budgetRoutes");
-const sendBudgetAlert = require("../utils/emailService");
 
 dotenv.config();
 connectDB();
