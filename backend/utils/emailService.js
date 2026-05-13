@@ -1,46 +1,36 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  family: 4,
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASS, // Google App Password
   },
-  tls: {
-    rejectUnauthorized: false,
-  },
-  connectionTimeout: 20000,
-  greetingTimeout: 20000,
-  socketTimeout: 30000,
 });
 
-const sendBudgetAlertEmail = async (
-  userEmail,
-  category,
-  spent,
-  budget
-) => {
+transporter.verify((error, success) => {
+  if (error) {
+    console.log("Email config error:", error);
+  } else {
+    console.log("Email server is ready");
+  }
+});
+
+const sendBudgetAlert = async (to, category, spent, budget) => {
   try {
-    await transporter.sendMail({
+    const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: userEmail,
-      subject: `Budget Alert - ${category} Category Exceeded`,
-      html: `
-        <h2>Budget Threshold Reached</h2>
-        <p>Your <strong>${category}</strong> expenses exceeded your set budget.</p>
-        <p><strong>Budget:</strong> Rs ${budget}</p>
-        <p><strong>Spent:</strong> Rs ${spent}</p>
-        <p>Please review your spending to stay financially balanced.</p>
-      `,
-    });
-    console.log("Sending email to:", userEmail);
-    console.log("Budget alert email sent successfully");
+      to,
+      subject: `Budget Alert for ${category}`,
+      text: `You have exceeded your ${category} budget.\n\nBudget: Rs ${budget}\nSpent: Rs ${spent}`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log("Email sent:", info.response);
   } catch (error) {
     console.log("Email sending failed:", error.message);
   }
 };
 
-module.exports = sendBudgetAlertEmail;
+module.exports = sendBudgetAlert;
