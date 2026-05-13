@@ -64,10 +64,12 @@ router.post("/add", async (req, res) => {
       expense,
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+  console.log("Expense Add Route Error:", error);
+  res.status(500).json({
+    message: "Server Error",
+    error: error.message,
+  });
+}
 });
 
 
@@ -82,10 +84,12 @@ router.get("/:userId", async (req, res) => {
 
     res.status(200).json(expenses);
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+  console.log("Expense Add Route Error:", error);
+  res.status(500).json({
+    message: "Server Error",
+    error: error.message,
+  });
+}
 });
 
 
@@ -100,10 +104,12 @@ router.delete("/:id", async (req, res) => {
       message: "Expense deleted successfully",
     });
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+  console.log("Expense Add Route Error:", error);
+  res.status(500).json({
+    message: "Server Error",
+    error: error.message,
+  });
+}
 });
 
 
@@ -120,10 +126,12 @@ router.put("/:id", async (req, res) => {
 
     res.status(200).json(updatedExpense);
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+  console.log("Expense Add Route Error:", error);
+  res.status(500).json({
+    message: "Server Error",
+    error: error.message,
+  });
+}
 });
 
 module.exports = router;
