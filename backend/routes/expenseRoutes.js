@@ -50,7 +50,7 @@ router.post("/add", async (req, res) => {
         const user = await User.findById(userId);
 
         if (user && user.email) {
-          await sendBudgetAlertEmail(
+          await sendBudgetAlert(
             user.email,
             category,
             totalSpent,
